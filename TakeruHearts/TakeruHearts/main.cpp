@@ -3,6 +3,11 @@
 #include <fstream>
 #include <iostream>
 #include <cassert>
+#include <memory>
+
+#include "CommonScene.h"
+
+//ポインタはアドレスを格納するための変数！
 
 struct GameConfig
 {
@@ -11,9 +16,10 @@ struct GameConfig
 	int masterSound;
 };
 
+
 bool LoadConfig(const std::string& filename, GameConfig& config)
 {
-	std::ifstream inputfile(filename);
+	std::ifstream inputfile(filename,std::ios::binary);
 
 	if (!inputfile.is_open())
 	{
@@ -33,7 +39,6 @@ bool LoadConfig(const std::string& filename, GameConfig& config)
 }
 
 
-
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
 
@@ -45,16 +50,26 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	}
 	
 	SetDrawScreen(DX_SCREEN_BACK);
+	//初期化（開始）
+
+	//構造体のインスタンス作成
+	SceneManager sceneManager(std::make_unique<SceneTitle>());
 
 	GameConfig config;
+
+	//LoadConfigで指定のパスが開けなかった場合は１を返す
 	if (!LoadConfig("../Data/AllVariables/GameConfig.json", config))
 	{
 		return 1;
 	}
 
-
+	//ウィンドウ画面の調整
 	SetGraphMode(config.screenWidth, config.screenHeight, true);
 	SetWindowSize(config.screenWidth, config.screenHeight);
+
+	
+
+	//初期化（終了）
 
 	SetUseZBuffer3D(true);
 
@@ -67,6 +82,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 		//ゲーム処理（開始）
 
+		sceneManager.HondleInput();
+		sceneManager.Update();
+		sceneManager.Draw();
 
 		//ゲーム処理（終了）
 
@@ -83,6 +101,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 		}
 	}
+
+	sceneManager.End();
 
 	DxLib_End();
 
